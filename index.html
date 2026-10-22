@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#172554">
+  <meta name="description" content="Jogo educativo para praticar tempos e formas verbais em português.">
+  <title>Card Game da Adequação</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="game.js?v=progress-fix-1" defer></script>
+</head>
+<body>
+  <main class="app-shell">
+    <header class="site-header">
+      <a class="brand" href="#inicio" aria-label="Card Game da Adequação, início">
+        <span class="brand-mark" aria-hidden="true">A</span>
+        <span>Card Game <strong>da Adequação</strong></span>
+      </a>
+      <span class="online-status"><span class="status-dot"></span> Jogo educativo</span>
+    </header>
+
+    <section id="screen-home" class="screen home-screen" aria-labelledby="home-title">
+      <div class="hero-copy">
+        <p class="eyebrow">Língua Portuguesa · tempos verbais</p>
+        <h1 id="home-title">Escolha a palavra que <span>faz sentido.</span></h1>
+        <p class="intro">Leia cada situação e complete a frase com o verbo adequado. Acerte para avançar de nível e somar pontos. Um erro encerra a partida — e traz uma explicação para aprender.</p>
+        <div class="how-it-works" aria-label="Como funciona">
+          <div><span class="step-number">01</span><span><strong>Leia</strong><small>Uma carta por rodada</small></span></div>
+          <div><span class="step-number">02</span><span><strong>Escolha</strong><small>Quatro alternativas</small></span></div>
+          <div><span class="step-number">03</span><span><strong>Avance</strong><small>Mais acertos, mais pontos</small></span></div>
+        </div>
+      </div>
+      <aside class="start-card">
+        <div class="card-decoration" aria-hidden="true"><span></span><span></span><span></span></div>
+        <p class="eyebrow">Sua partida começa aqui</p>
+        <h2>Pronto para jogar?</h2>
+        <label for="player-name">Como podemos chamar você?</label>
+        <input id="player-name" name="player-name" type="text" maxlength="24" autocomplete="nickname" placeholder="Digite seu nome" aria-describedby="name-help">
+        <small id="name-help" class="field-help">Use até 24 caracteres. Não informe dados pessoais.</small>
+        <p id="home-error" class="inline-error" role="alert" hidden></p>
+        <button id="start-button" class="button button-primary button-wide" type="button">Começar jogo <span aria-hidden="true">→</span></button>
+        <div class="ranking-note"><span aria-hidden="true">↗</span><span><strong>Classificação online</strong><small id="connection-status">Verificando conexão…</small></span></div>
+        <button id="open-ranking-button" class="text-button ranking-link" type="button">Ver classificação geral →</button>
+      </aside>
+    </section>
+
+    <section id="screen-game" class="screen game-screen" aria-labelledby="question-title" hidden>
+      <div class="game-topline">
+        <button id="quit-button" class="text-button" type="button">← Sair da partida</button>
+        <span id="player-label" class="player-label"></span>
+      </div>
+      <div class="stats-row" aria-label="Progresso da partida">
+        <div class="stat-box"><span class="stat-label">PONTUAÇÃO</span><strong id="score-value">0</strong></div>
+        <div class="stat-box"><span class="stat-label">ACERTOS</span><strong id="correct-value">0</strong></div>
+        <div class="stat-box level-stat"><span class="stat-label">NÍVEL ATUAL</span><strong id="level-value" class="level-pill level-easy">Fácil</strong></div>
+        <div class="stat-box"><span class="stat-label">CADA ACERTO</span><strong id="points-value">10 <small>pts</small></strong></div>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-caption"><span>Sequência para o próximo nível</span><span id="progress-text">0 de 3 acertos</span></div>
+        <div class="progress-track" role="progressbar" aria-label="Progresso para o próximo nível" aria-valuemin="0" aria-valuemax="3" aria-valuenow="0"><span id="progress-fill"></span></div>
+      </div>
+      <article class="question-card">
+        <div class="question-meta"><span id="card-type" class="type-tag">FRASE INCOMPLETA</span><span id="card-difficulty" class="difficulty-tag">FÁCIL</span></div>
+        <p id="scenario-text" class="scenario" hidden></p>
+        <h1 id="question-title" class="question-text"></h1>
+        <p class="choose-hint">Escolha uma alternativa</p>
+        <div id="answer-list" class="answer-list" role="group" aria-label="Alternativas"></div>
+        <div id="answer-feedback" class="answer-feedback" aria-live="polite" hidden>
+          <p id="feedback-title" class="feedback-title"></p>
+          <p id="feedback-explanation" class="feedback-explanation"></p>
+          <button id="continue-button" class="button button-primary" type="button">Próxima carta <span aria-hidden="true">→</span></button>
+        </div>
+      </article>
+      <p class="game-footnote">As cartas não se repetem durante esta partida.</p>
+    </section>
+
+    <section id="screen-result" class="screen result-screen" aria-labelledby="result-title" hidden>
+      <div class="result-card">
+        <div id="result-icon" class="result-icon" aria-hidden="true">✦</div>
+        <p class="eyebrow">Partida concluída</p>
+        <h1 id="result-title">Fim de jogo, <span id="result-name"></span>.</h1>
+        <p id="result-message" class="result-message"></p>
+        <div id="last-answer" class="last-answer" hidden></div>
+        <div class="final-stats">
+          <div><span>Pontuação final</span><strong id="final-score">0</strong></div>
+          <div><span>Respostas corretas</span><strong id="final-correct">0</strong></div>
+          <div><span>Maior nível</span><strong id="final-level">Fácil</strong></div>
+        </div>
+        <div class="result-actions">
+          <button id="restart-button" class="button button-primary" type="button">Jogar novamente <span aria-hidden="true">↻</span></button>
+          <div class="save-result" aria-live="polite">
+            <p id="save-status" class="save-status">Aguardando confirmação do Supabase…</p>
+            <button id="retry-save-button" class="text-button" type="button" hidden>Tentar salvar novamente</button>
+          </div>
+          <button id="result-ranking-button" class="button button-secondary" type="button">Consultar classificação</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="screen-ranking" class="screen ranking-screen" aria-labelledby="ranking-title" hidden>
+      <div class="ranking-heading">
+        <div>
+          <p class="eyebrow">Resultados compartilhados</p>
+          <h1 id="ranking-title">Classificação geral</h1>
+          <p>Partidas registradas no banco de dados online.</p>
+        </div>
+        <div class="ranking-controls">
+          <button id="refresh-ranking-button" class="button button-secondary" type="button">Atualizar lista</button>
+          <button id="back-ranking-button" class="text-button" type="button">← Voltar</button>
+        </div>
+      </div>
+      <p id="ranking-status" class="ranking-status" role="status" aria-live="polite">Carregando classificação…</p>
+      <div class="table-wrap">
+        <table class="ranking-table">
+          <thead><tr><th scope="col">Posição</th><th scope="col">Jogador</th><th scope="col">Pontuação</th><th scope="col">Acertos</th><th scope="col">Nível máximo</th></tr></thead>
+          <tbody id="ranking-rows"></tbody>
+        </table>
+      </div>
+      <div class="ranking-pagination" aria-label="Paginação do ranking">
+        <button id="ranking-previous-button" class="button button-secondary" type="button" disabled>← Anterior</button>
+        <span id="ranking-page-label">Página 1</span>
+        <button id="ranking-next-button" class="button button-secondary" type="button" disabled>Próxima →</button>
+      </div>
+      <p class="ranking-footnote">Ordenação: pontuação, acertos, data da partida e identificador único.</p>
+    </section>
+
+    <footer class="site-footer"><span>Aprender também é uma boa jogada.</span><span>Card Game da Adequação</span></footer>
+  </main>
+</body>
+</html>
