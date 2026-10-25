@@ -69,14 +69,97 @@ function createUuid() {
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }
 
+function setCaptchaStatus(state, message) {
+  const status = $("captcha-status");
+  if (!status) return;
+  status.textContent = message;
+  status.dataset.state = state;
+  $("captcha-retry").hidden = !["expired", "error"].includes(state);
+}
+
+let captchaTokenStore = null;
+let captchaWidgetId = null;
+
+function renderCaptchaWidget() {
+  const config = window.SUPABASE_CONFIG;
+  const runtime = window.HCaptchaRuntime;
+  if (!config?.captchaRequired || captchaWidgetId !== null || !window.hcaptcha?.render) return;
+  if (!config.captchaSitekey) {
+    setCaptchaStatus("error", "A verificação não está configurada. Avise o responsável pelo jogo.");
+    return;
+  }
+  try {
+    captchaWidgetId = window.hcaptcha.render("captcha-widget", {
+      sitekey: config.captchaSitekey,
+      size: "compact",
+      callback: token => captchaTokenStore.accept(token),
+      "expired-callback": () => captchaTokenStore.expire(),
+      "chalexpired-callback": () => captchaTokenStore.expire(),
+      "error-callback": () => captchaTokenStore.fail()
+    });
+    captchaTokenStore.setWidgetId(captchaWidgetId);
+    if (runtime) runtime.widgetId = captchaWidgetId;
+    setCaptchaStatus("ready", "Complete a verificação. O token será usado apenas na autenticação.");
+  } catch {
+    captchaWidgetId = null;
+    setCaptchaStatus("error", "Não foi possível exibir a verificação. Tente recarregá-la.");
+  }
+}
+
+function initializeCaptcha() {
+  const config = window.SUPABASE_CONFIG;
+  if (!config?.captchaRequired) {
+    $("captcha-panel").hidden = true;
+    return;
+  }
+  $("captcha-panel").hidden = false;
+  if (!window.CardGameCaptcha?.createTokenStore) {
+    setCaptchaStatus("error", "O recurso de verificação não carregou. Atualize a página e tente novamente.");
+    return;
+  }
+  captchaTokenStore = window.CardGameCaptcha.createTokenStore(setCaptchaStatus);
+  const runtime = window.HCaptchaRuntime;
+  if (!runtime) {
+    setCaptchaStatus("error", "Não foi possível carregar a verificação. Atualize a página e tente novamente.");
+    return;
+  }
+  window.addEventListener("hcaptcha:state", event => {
+    const state = event.detail?.status;
+    if (state === "ready") {
+      renderCaptchaWidget();
+    } else if (state === "loading") {
+      setCaptchaStatus("loading", "Carregando verificação. Se ela não aparecer, tente recarregá-la.");
+    } else if (state === "error") {
+      setCaptchaStatus("error", "A verificação não carregou. Confira sua conexão ou bloqueador e tente recarregá-la.");
+    }
+  });
+  if (runtime.status === "ready") renderCaptchaWidget();
+  else if (runtime.status === "error") setCaptchaStatus("error", "A verificação não carregou. Confira sua conexão ou bloqueador e tente recarregá-la.");
+  else setCaptchaStatus("loading", "Carregando verificação. Se ela não aparecer, tente recarregá-la.");
+}
+
+function retryCaptcha() {
+  const runtime = window.HCaptchaRuntime;
+  const api = window.hcaptcha;
+  if (api && captchaWidgetId !== null) {
+    captchaTokenStore?.reset(api, "Verificação reiniciada. Complete o desafio para tentar novamente.");
+    return;
+  }
+  captchaTokenStore?.clear();
+  if (runtime?.reload) runtime.reload();
+  else setCaptchaStatus("error", "Atualize a página e tente novamente. Se o problema persistir, verifique sua conexão.");
+}
+
 async function ensureAnonymousSession() {
-  const { data, error } = await supabaseClient.auth.getSession();
-  if (error) throw error;
-  if (data.session) return data.session;
-  const result = await supabaseClient.auth.signInAnonymously();
-  if (result.error) throw result.error;
-  if (!result.data.session) throw new Error("O Supabase não criou uma sessão anônima.");
-  return result.data.session;
+  if (!window.CardGameCaptcha?.ensureAnonymousSession) {
+    throw new Error("O recurso de autenticação segura não carregou. Atualize a página.");
+  }
+  const config = window.SUPABASE_CONFIG || {};
+  return window.CardGameCaptcha.ensureAnonymousSession(supabaseClient.auth, {
+    captchaRequired: config.captchaRequired === true,
+    getCaptchaToken: () => captchaTokenStore?.getValidToken(window.hcaptcha) || null,
+    resetCaptcha: () => captchaTokenStore?.reset(window.hcaptcha, "Verificação reiniciada. A sessão poderá ser reutilizada nesta página.")
+  });
 }
 
 async function invokeFunction(name, body) {
@@ -461,6 +544,7 @@ async function abandonGame() {
 }
 
 $("start-button").addEventListener("click", startGame);
+$("captcha-retry").addEventListener("click", retryCaptcha);
 $("player-name").addEventListener("keydown", event => { if (event.key === "Enter") startGame(); });
 $("player-name").addEventListener("input", () => { $("home-error").hidden = true; });
 $("continue-button").addEventListener("click", advanceToNextCard);
@@ -484,4 +568,5 @@ $("ranking-next-button").addEventListener("click", () => {
 });
 
 initializeSupabase();
+initializeCaptcha();
 resumeStoredGame();

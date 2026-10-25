@@ -1,11 +1,15 @@
 // Chaves publishable são públicas; nunca coloque service_role ou sb_secret aqui.
 const localConfig = Object.freeze({
+  captchaRequired: false,
+  captchaSitekey: null,
   url: "http://127.0.0.1:54321",
   publishableKey: "sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH"
 });
 
 // Mantém intactas as credenciais públicas do projeto hospedado.
 const hostedConfig = Object.freeze({
+  captchaRequired: true,
+  captchaSitekey: "04beb150-01a8-44ae-915a-23aa325afc80",
   url: "https://ochfpbfbjhbdabazukyr.supabase.co",
   publishableKey: "sb_publishable_V4lXfHgXmjVyPWjYzghFvA_1bFxgmZg"
 });

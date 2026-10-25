@@ -9,7 +9,9 @@
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
-  <script src="game.js?v=progress-fix-1" defer></script>
+  <script src="captcha-auth.js"></script>
+  <script src="captcha-loader.js"></script>
+  <script src="game.js?v=hcaptcha-1" defer></script>
 </head>
 <body>
   <main class="app-shell">
@@ -39,6 +41,13 @@
         <label for="player-name">Como podemos chamar você?</label>
         <input id="player-name" name="player-name" type="text" maxlength="24" autocomplete="nickname" placeholder="Digite seu nome" aria-describedby="name-help">
         <small id="name-help" class="field-help">Use até 24 caracteres. Não informe dados pessoais.</small>
+        <section id="captcha-panel" class="captcha-panel" aria-labelledby="captcha-title" hidden>
+          <p id="captcha-title" class="captcha-title">Proteção contra bots</p>
+          <p class="captcha-help">Para criar uma nova sessão neste site, confirme a verificação abaixo. Uma sessão válida já existente será reutilizada.</p>
+          <div id="captcha-widget" class="captcha-widget"></div>
+          <p id="captcha-status" class="captcha-status" role="status" aria-live="polite"></p>
+          <button id="captcha-retry" class="captcha-retry" type="button" hidden>Recarregar verificação</button>
+        </section>
         <p id="home-error" class="inline-error" role="alert" hidden></p>
         <button id="start-button" class="button button-primary button-wide" type="button">Começar jogo <span aria-hidden="true">→</span></button>
         <div class="ranking-note"><span aria-hidden="true">↗</span><span><strong>Classificação online</strong><small id="connection-status">Verificando conexão…</small></span></div>
