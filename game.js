@@ -202,6 +202,14 @@ function updateStats() {
   $("progress-fill").style.width = `${Math.min(100, progress / target * 100)}%`;
 }
 
+function animateQuestionCard() {
+  const cardSurface = document.querySelector(".question-card");
+  if (!cardSurface) return;
+  cardSurface.classList.remove("card-enter");
+  void cardSurface.offsetWidth;
+  cardSurface.classList.add("card-enter");
+}
+
 function renderCard(card) {
   if (!card || !Array.isArray(card.options) || card.options.length !== 4) {
     throw new Error("O servidor enviou uma carta inválida.");
@@ -237,6 +245,7 @@ function renderCard(card) {
     list.append(button);
   });
   updateStats();
+  animateQuestionCard();
 }
 
 function syncSession(session) {
