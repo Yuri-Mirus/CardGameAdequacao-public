@@ -38,3 +38,15 @@ button{cursor:pointer}
 .captcha-retry{min-height:40px;padding:8px 0;border:0;background:transparent;color:var(--blue);font:inherit;font-size:11px;font-weight:700;text-decoration:underline}
 .captcha-retry:focus-visible{outline:3px solid #8ea0ff;outline-offset:2px}
 @media(max-width:380px){.captcha-panel{padding:12px 8px}.captcha-widget{justify-content:flex-start;overflow-x:auto}.captcha-help{font-size:10px}}
+
+
+/* Animação de entrada da carta em cada nova rodada. */
+.question-card.card-enter {
+  animation: card-deal .5s cubic-bezier(.2,.75,.25,1) both;
+  transform-origin: 50% 18%;
+}
+@keyframes card-deal {
+  0% { opacity: 0; transform: perspective(1000px) rotateX(-7deg) translateY(17px) scale(.985); filter: blur(1px); }
+  68% { opacity: 1; transform: perspective(1000px) rotateX(1deg) translateY(-2px) scale(1.002); filter: blur(0); }
+  100% { opacity: 1; transform: perspective(1000px) rotateX(0) translateY(0) scale(1); filter: blur(0); }
+}
