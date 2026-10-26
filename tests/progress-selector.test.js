@@ -15,7 +15,7 @@ test("updateStats selects the progress bar by its HTML class and updates its ARI
   assert.ok(updateStatsSource, "updateStats() must exist");
   assert.match(htmlSource, /class=[\"'][^\"']*\bprogress-track\b[^\"']*[\"']/);
   assert.match(htmlSource, /id=[\"']progress-fill[\"']/);
-  assert.match(htmlSource, /src=[\"']game\.js\?v=hcaptcha-1[\"']/);
+  assert.match(htmlSource, /src=[\"']game\.js\?v=deck200-animation1[\"']/);
   assert.doesNotMatch(updateStatsSource, /\$\([\"']\.progress-track[\"']\)/);
   assert.match(updateStatsSource, /document\.querySelector\([\"']\.progress-track[\"']\)/);
 
